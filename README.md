@@ -1,21 +1,18 @@
 # Automated Speaking Scorer
 
-An automated system for scoring English speaking performances using AI models. The system analyzes audio recordings for grammar, vocabulary, content, fluency, pronunciation, and provides both analytic and holistic scores.
+An automated system for scoring English speaking performances using Google's AI models. The system analyzes audio recordings for grammar, vocabulary, content, fluency, pronunciation, and provides both analytic and holistic scores.
 
 ## Features
 
 - Automated scoring of English speaking performances
 - Multiple scoring dimensions:
-  - Analytic scoring (grammar, vocabulary, content, fluency, pronunciation)
+  - Analytic scoring (grammar, vocabulary, content, fluency, pronunciation, overall)
   - Holistic scoring (overall performance)
-  - Off-topic detection
+  - Off-topic detection with confidence score and a comment.
 - Excel report generation with detailed scoring breakdown
-- Support for multiple audio formats (mp3, wav, m4a, aac, ogg, flac)
 - Configurable scoring criteria and rubrics
 - User-friendly configuration interface
 - Session-based task management
-- Automatic task ID generation
-- Real-time scoring progress tracking
 - Detailed error logging and reporting
 
 ## Project Structure
@@ -79,27 +76,16 @@ pip install -r requirements.txt
 ```
 
 ## Usage
+There are two ways to use the application: Either as a standalone executable or as a Python script. See the `Creating Executable` section for the steps to create the executable. Read along for running the application as a Python script.
+
+### Using the Python Script
 
 1. Launch the application:
 ```bash
 python main.py
 ```
 
-2. Configure the application:
-   - Click the "Configuration" button in the main window
-   - Enter your API keys (get them from https://makersuite.google.com/app/apikey)
-   - Define speaking tasks using the session management interface
-   - Tasks are automatically assigned IDs (t1, t2, etc.)
-   - Click Save to store your configuration
-
-3. Score speaking performances:
-   - Click "Select Folder" to choose a directory with audio files
-   - Select the desired scoring options
-   - Click "Start Scoring" to begin the process
-   - Monitor progress in real-time
-   - Results will be saved in the output directory as Excel files
-
-## Creating Executable
+### Creating Executable
 
 1. Install PyInstaller and other dependencies:
 ```bash
@@ -113,17 +99,23 @@ python build.py
 
 The executable will be created in the `dist` directory as `Speaking Scorer.exe` (Windows) or `Speaking Scorer` (macOS/Linux).
 
-### Using the Executable
+### Using the Application
 
-1. Run the executable
+1. Run the executable or the Python script.
 2. Configure the application:
-   - Click the "Configuration" button
-   - Enter your API keys
-   - Create sessions and define tasks
-   - Tasks IDs are automatically generated
-   - Click Save
-3. Select a folder containing audio files
-4. Choose scoring options and start the process
+   - Click the "Configuration" button in the main window
+   - Enter your API keys (get them from https://makersuite.google.com/app/apikey)
+   - Define speaking tasks using the session management interface. You can define multiple tasks for each session.
+   - Tasks are automatically assigned IDs (t1, t2, etc.)
+   - Click Save to store your configuration.
+3. Score speaking performances:
+   - Click "Select Folder" to choose a directory with audio files.
+   - The files should follow  naming convention: `{student_id}-{session_id}-{task_id}.{extension}`. (for example: `20252025-1-t1.mp3`)
+   - Select the desired scoring options
+   - Click "Start Scoring" to begin the process
+   - Monitor progress in real-time
+   - Results will be saved in the folder where the audio files are located.
+   - IF errors occur, check the error logs in the same directory as the audio files.
 
 **Important Notes**: 
 - The configuration is stored in `config.json` next to the executable
