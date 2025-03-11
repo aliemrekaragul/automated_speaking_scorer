@@ -2,12 +2,14 @@ import google.generativeai as genai
 from models.score_models import AnalyticScores
 from utils.file_utils import read_file_as_bytes
 import os
-import json
 import re
 from task_definitions import TASK_DEFINITIONS
 from utils.response_parser import ResponseParser
 import time
-from typing import Any, Optional
+from typing import Any
+import json
+import requests
+from utils.config_manager import ConfigManager
 
 class AnalyticScoringAgent:
     MAX_RETRIES = 3
@@ -15,16 +17,15 @@ class AnalyticScoringAgent:
     MODEL_NAME = 'models/gemini-1.5-flash'
 
     def __init__(self):
+        self.api_key = ConfigManager.get_api_key("ANALYTIC_SCORING_API_KEY")
+        if not self.api_key:
+            raise ValueError("ANALYTIC_SCORING_API_KEY not found in configuration")
         self._initialize_model()
         self._initialize_prompt_template()
     
     def _initialize_model(self) -> None:
         """Initialize the Gemini model with API key."""
-        api_key = os.getenv("ANALYTIC_SCORING_API_KEY")
-        if not api_key:
-            raise ValueError("ANALYTIC_SCORING_API_KEY not found in environment variables")
-        
-        genai.configure(api_key=api_key)
+        genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.MODEL_NAME)
 
     def _initialize_prompt_template(self) -> None:
@@ -151,7 +152,6 @@ class AnalyticScoringAgent:
                 if "429" in str(e):  # Rate limit error
                     retry_count += 1
                     if retry_count < self.MAX_RETRIES:
-                        # Exponential backoff
                         delay = self.INITIAL_RETRY_DELAY * (2 ** (retry_count - 1))
                         print(f"Rate limit reached. Retrying in {delay} seconds... (Attempt {retry_count + 1}/{self.MAX_RETRIES})")
                         time.sleep(delay)
@@ -163,7 +163,6 @@ class AnalyticScoringAgent:
     async def score_performance(self, file_path: str) -> AnalyticScores:
         """Score the speaking performance analytically using Gemini."""
         try:
-            # Get the task definition based on file name
             session_id, task_id = self._parse_file_name(file_path)
             task_definition = TASK_DEFINITIONS[session_id][task_id]
             
@@ -171,15 +170,12 @@ class AnalyticScoringAgent:
             
             prompt = self.prompt_template.replace("<<TASK_DEFINITION>>", task_definition)
             
-            # Generate content with retry logic
             response = await self._generate_content_with_retry(prompt, audio_bytes)
             
-            # Parse the response
             scores_dict = ResponseParser.parse_analytic_response(response.text)
             if scores_dict is None:
                 raise ValueError(f"Failed to parse response: {response.text}")
             
-            # Create and return AnalyticScores object
             return AnalyticScores(**scores_dict)
             
         except Exception as e:

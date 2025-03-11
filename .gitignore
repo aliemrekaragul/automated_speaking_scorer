@@ -57,6 +57,7 @@ pip-delete-this-directory.txt
 *.xls
 *.csv
 *.json
+!config.example.json
 logs/
 output/
 temp/

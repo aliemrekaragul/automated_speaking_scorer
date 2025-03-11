@@ -1,4 +1,4 @@
-"""Task definitions for different speaking tasks."""
+"""These are sample task definitions."""
 
 TASK_DEFINITIONS = {
     "1":{

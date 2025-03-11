@@ -7,9 +7,9 @@ class ScoreAdjustmentAgent:
         """
         Calculate adjusted score by summing analytic rubric domains.
         """
+        # TODO: implement conversion table here when it is ready
         for perf in performances:
             if perf.analytic_scores:
-                # Sum all analytic domains
                 total_score = sum([
                     perf.analytic_scores.grammar,
                     perf.analytic_scores.vocabulary,

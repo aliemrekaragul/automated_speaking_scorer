@@ -2,58 +2,30 @@ import google.generativeai as genai
 from models.score_models import OffTopicAnalysis
 from utils.file_utils import read_file_as_bytes
 import os
-import json
 import re
 from task_definitions import TASK_DEFINITIONS
 from utils.response_parser import ResponseParser
 import time
-from typing import Any, Optional
-
-class OffTopicResponseParser:
-    """
-    Utility class to parse off-topic detection API responses.
-    """
-    @staticmethod
-    def parse(response: str) -> dict:
-        try:
-            parsed = json.loads(response)
-            return {
-                "is_off_topic": parsed.get("off_topic", False),
-                "confidence": 0.95,  # High confidence since it's a binary decision
-                "explanation": "The response is " + ("not " if not parsed.get("off_topic", False) else "") + "relevant to the given topic."
-            }
-        except json.JSONDecodeError:
-            match = re.search(r'\{.*?\}', response, re.DOTALL)
-            if match:
-                json_str = match.group(0).replace('\n', '').replace('\\', '')
-                try:
-                    parsed = json.loads(json_str)
-                    return {
-                        "is_off_topic": parsed.get("off_topic", False),
-                        "confidence": 0.95,  # High confidence since it's a binary decision
-                        "explanation": "The response is " + ("not " if not parsed.get("off_topic", False) else "") + "relevant to the given topic."
-                    }
-                except json.JSONDecodeError:
-                    return None
-            else:
-                return None
+from typing import Any
+import json
+import requests
+from utils.config_manager import ConfigManager
 
 class OffTopicDetectionAgent:
     MAX_RETRIES = 3
-    INITIAL_RETRY_DELAY = 60  # seconds
+    INITIAL_RETRY_DELAY = 60  
     MODEL_NAME = 'models/gemini-1.5-flash'
 
     def __init__(self):
+        self.api_key = ConfigManager.get_api_key("OFF_TOPIC_DETECTION_API_KEY")
+        if not self.api_key:
+            raise ValueError("OFF_TOPIC_DETECTION_API_KEY not found in configuration")
         self._initialize_model()
         self._initialize_prompt_template()
     
     def _initialize_model(self) -> None:
         """Initialize the Gemini model with API key."""
-        api_key = os.getenv("OFF_TOPIC_DETECTION_API_KEY")
-        if not api_key:
-            raise ValueError("OFF_TOPIC_DETECTION_API_KEY not found in environment variables")
-        
-        genai.configure(api_key=api_key)
+        genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.MODEL_NAME)
 
     def _initialize_prompt_template(self) -> None:
@@ -101,7 +73,6 @@ class OffTopicDetectionAgent:
                 if "429" in str(e):  # Rate limit error
                     retry_count += 1
                     if retry_count < self.MAX_RETRIES:
-                        # Exponential backoff
                         delay = self.INITIAL_RETRY_DELAY * (2 ** (retry_count - 1))
                         print(f"Rate limit reached. Retrying in {delay} seconds... (Attempt {retry_count + 1}/{self.MAX_RETRIES})")
                         time.sleep(delay)
@@ -113,7 +84,6 @@ class OffTopicDetectionAgent:
     async def analyze_topic_relevance(self, file_path: str) -> OffTopicAnalysis:
         """Analyze if the speech is off-topic using Gemini."""
         try:
-            # Get the task definition based on file name
             session_id, task_id = self._parse_file_name(file_path)
             task_definition = TASK_DEFINITIONS[session_id][task_id]
             
@@ -121,15 +91,12 @@ class OffTopicDetectionAgent:
             
             prompt = self.prompt_template.replace("<<TASK_DEFINITION>>", task_definition)
             
-            # Generate content with retry logic
             response = await self._generate_content_with_retry(prompt, audio_bytes)
             
-            # Parse the response
             result = ResponseParser.parse_off_topic_response(response.text)
             if result is None:
                 raise ValueError(f"Failed to parse response: {response.text}")
             
-            # Create and return OffTopicAnalysis object
             return OffTopicAnalysis(**result)
             
         except Exception as e:

@@ -24,10 +24,8 @@ def save_scores_to_excel(performances: List[SpeakingPerformance], output_dir: st
     Returns:
         str: Path to the saved Excel file
     """
-    # Prepare data for DataFrame
     data = []
     for perf in performances:
-        # Parse file name into components
         student_id, session_id, task_id = _parse_file_name(perf.file_name)
         
         row = {
@@ -49,19 +47,15 @@ def save_scores_to_excel(performances: List[SpeakingPerformance], output_dir: st
         }
         data.append(row)
     
-    # Create DataFrame
     df = pd.DataFrame(data)
     
-    # Calculate student averages for Conversions sheet
     conversions_data = []
     for student_id in df['Student ID'].unique():
         student_df = df[df['Student ID'] == student_id]
         
-        # Calculate averages
         avg_analytic = student_df['Analytic Score'].mean()
         avg_holistic = student_df['Holistic Score'].mean()
         
-        # Count off-topic responses
         total_tasks = len(student_df)
         off_topic_count = student_df['Off Topic'].sum()  
         
@@ -74,25 +68,19 @@ def save_scores_to_excel(performances: List[SpeakingPerformance], output_dir: st
     
     conversions_df = pd.DataFrame(conversions_data)
     
-    # Generate filename with timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = f'speaking_scores_{timestamp}.xlsx'
     filepath = os.path.join(output_dir, filename)
     
-    # Create Excel writer with formatting
     with pd.ExcelWriter(filepath, engine='xlsxwriter') as writer:
-        # Write Scores sheet
         df.to_excel(writer, sheet_name='Scores', index=False)
         
-        # Write Conversions sheet
         conversions_df.to_excel(writer, sheet_name='Conversions', index=False)
         
-        # Get workbook and worksheet objects for formatting
         workbook = writer.book
         scores_worksheet = writer.sheets['Scores']
         conversions_worksheet = writer.sheets['Conversions']
         
-        # Define formats
         header_format = workbook.add_format({
             'bold': True,
             'bg_color': '#D9E1F2',
@@ -109,11 +97,9 @@ def save_scores_to_excel(performances: List[SpeakingPerformance], output_dir: st
             'border': 1
         })
         
-        # Format Scores sheet
         for col_num, value in enumerate(df.columns.values):
             scores_worksheet.write(0, col_num, value, header_format)
             
-        # Set column widths for Scores sheet
         scores_worksheet.set_column('A:A', 20)  # File Name
         scores_worksheet.set_column('B:B', 15)  # Student ID
         scores_worksheet.set_column('C:C', 10)  # Session ID
@@ -123,7 +109,6 @@ def save_scores_to_excel(performances: List[SpeakingPerformance], output_dir: st
         scores_worksheet.set_column('M:N', 12)  # Off Topic columns
         scores_worksheet.set_column('O:O', 40)  # Off Topic Explanation
         
-        # Apply formats to Scores sheet
         score_cols = ['E:K', 'L:L', 'N:N']
         for col_range in score_cols:
             scores_worksheet.set_column(col_range, None, score_format)
@@ -132,16 +117,13 @@ def save_scores_to_excel(performances: List[SpeakingPerformance], output_dir: st
         for col_range in text_cols:
             scores_worksheet.set_column(col_range, None, text_format)
         
-        # Format Conversions sheet
         for col_num, value in enumerate(conversions_df.columns.values):
             conversions_worksheet.write(0, col_num, value, header_format)
         
-        # Set column widths for Conversions sheet
         conversions_worksheet.set_column('A:A', 15)  # Student ID
         conversions_worksheet.set_column('B:C', 18)  # Average scores
         conversions_worksheet.set_column('D:D', 15)  # Off Topic Task Count
         
-        # Apply formats to Conversions sheet
         conversions_worksheet.set_column('B:C', None, score_format)  # Average scores
         conversions_worksheet.set_column('A:A', None, text_format)   # Student ID
         conversions_worksheet.set_column('D:D', None, text_format)   # Off Topic Count

@@ -41,8 +41,8 @@ automated_speaking_scorer/
 ├── build.py                # Build script for executable
 ├── SpeakingScorer.spec     # PyInstaller specification
 ├── task_definitions.py      # Speaking task definitions
-├── requirements.txt         # Python dependencies
-└── .env.example            # Example environment variables
+├── config.example.json     # Example configuration file
+└── requirements.txt         # Python dependencies
 ```
 
 ## Prerequisites
@@ -72,12 +72,6 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 3. Install dependencies:
 ```bash
 pip install -r requirements.txt
-```
-
-4. Set up environment variables:
-```bash
-cp .env.example .env
-# Edit .env with your API keys and configuration
 ```
 
 ## Usage
@@ -134,7 +128,24 @@ The executable will be created in the `dist` directory as `Speaking Scorer.exe` 
 
 ## Configuration
 
-The system uses a `config.json` file with the following structure:
+The system looks for configuration in the following locations and order:
+
+1. `config.json` in the same directory as the executable (when running the .exe) or in the project root directory (when running from source)
+2. Environment variables in the system
+   - No .env file is used directly
+   - Environment variables must be set in the system settings
+   - Only used for API keys if they're not found in config.json
+
+An example configuration file is provided as `config.example.json`. To get started:
+
+1. Copy the example config:
+```bash
+cp config.example.json config.json
+```
+
+2. Edit `config.json` with your API keys and task definitions
+
+The `config.json` file structure:
 
 ```json
 {
@@ -154,10 +165,26 @@ The system uses a `config.json` file with the following structure:
 }
 ```
 
-The configuration can be managed through:
-- The built-in configuration UI (recommended)
-- Manual editing of config.json
-- Environment variables
+Configuration can be managed through:
+1. The built-in configuration UI (recommended)
+   - Opens when clicking the "Configuration" button
+   - Changes are automatically saved to config.json
+   - Provides user-friendly interface for task management
+
+2. Direct editing of config.json (advanced users)
+   - Must follow the exact JSON structure shown above
+   - Be careful with JSON syntax
+   - See config.example.json for a complete example with sample tasks
+
+When running the executable:
+- Place config.json in the same folder as the .exe file
+- The app will create config.json if it doesn't exist
+- All changes made through the UI are saved to this file
+
+When running from source:
+- config.json should be in the project root directory
+- The app will create it if it doesn't exist
+- Changes are saved relative to the main.py location
 
 ## Output Format
 

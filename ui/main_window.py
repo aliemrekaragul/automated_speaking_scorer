@@ -9,7 +9,6 @@ from agents.score_adjustment_agent import ScoreAdjustmentAgent
 from models.score_models import SpeakingPerformance
 from utils.excel_utils import save_scores_to_excel
 from utils.config_manager import ConfigManager
-import numpy as np
 from datetime import datetime
 
 from PyQt6.QtWidgets import (
@@ -21,16 +20,16 @@ from PyQt6.QtWidgets import (
     QTextEdit, QHBoxLayout
 )
 class ScoringWorker(QThread):
-    progress = pyqtSignal(int, str)  # Progress value and current file
+    progress = pyqtSignal(int, str) 
     finished = pyqtSignal(list)
-    error = pyqtSignal(tuple)  # Changed to emit (error_count, log_path)
+    error = pyqtSignal(tuple)  
     
     def __init__(self, folder_path: str, scoring_options: dict):
         super().__init__()
         self.folder_path = folder_path
         self.scoring_options = scoring_options
         self._is_cancelled = False
-        self.errors = []  # List to collect all errors
+        self.errors = [] 
         
     def save_error_log(self):
         """Save errors to a log file in the selected folder."""
@@ -56,19 +55,16 @@ class ScoringWorker(QThread):
         
     def run(self):
         try:
-            # Get all mp3 files in the folder
             audio_files = [f for f in os.listdir(self.folder_path) if f.endswith('.mp3')]
             if not audio_files:
                 self.add_error("No MP3 files found in the selected folder.")
                 self.error.emit((len(self.errors), self.save_error_log()))
                 return
                 
-            # Initialize agents based on selected options
             performances = []
             failed_files = []
             total_files = len(audio_files)
             
-            # Create event loop for async operations
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             
@@ -90,7 +86,6 @@ class ScoringWorker(QThread):
                         
                         scoring_failed = False
                         
-                        # Analytic scoring
                         if self.scoring_options['analytic']:
                             try:
                                 agent = AnalyticScoringAgent()
@@ -101,7 +96,6 @@ class ScoringWorker(QThread):
                                 self.add_error(f"Analytic scoring failed for {audio_file}: {str(e)}")
                                 scoring_failed = True
                         
-                        # Holistic scoring
                         if self.scoring_options['holistic']:
                             try:
                                 agent = HolisticScoringAgent()
@@ -112,7 +106,6 @@ class ScoringWorker(QThread):
                                 self.add_error(f"Holistic scoring failed for {audio_file}: {str(e)}")
                                 scoring_failed = True
                         
-                        # Off-topic detection
                         if self.scoring_options['off_topic']:
                             try:
                                 agent = OffTopicDetectionAgent()
@@ -128,7 +121,6 @@ class ScoringWorker(QThread):
                         else:
                             performances.append(performance)
                         
-                        # Update progress with current file
                         progress = int((i + 1) / total_files * 100)
                         self.progress.emit(progress, f"Processing: {audio_file}")
                         
@@ -137,7 +129,6 @@ class ScoringWorker(QThread):
                         failed_files.append(audio_file)
                         continue
                 
-                # Score adjustment if selected and we have successful performances
                 if not self._is_cancelled and self.scoring_options['score_adjustment'] and performances:
                     try:
                         self.progress.emit(100, "Adjusting scores...")
@@ -147,18 +138,15 @@ class ScoringWorker(QThread):
                         self.add_error(f"Score adjustment failed: {str(e)}")
                 
             finally:
-                # Always close the loop
                 loop.close()
             
-            # Emit errors if any occurred
             if self.errors:
                 log_path = self.save_error_log()
                 self.error.emit((len(self.errors), log_path))
             
-            # Emit results if we have any performances
             if performances:
                 self.finished.emit(performances)
-            elif not self.errors:  # Only emit if no other errors
+            elif not self.errors: 
                 self.add_error("No performances were successfully processed.")
                 log_path = self.save_error_log()
                 self.error.emit((len(self.errors), log_path))
@@ -166,7 +154,6 @@ class ScoringWorker(QThread):
         except Exception as e:
             self.add_error(f"Critical error occurred: {str(e)}")
             self.error.emit((len(self.errors), self.save_error_log()))
-            # Ensure loop is closed even if critical error occurs
             if 'loop' in locals() and loop is not None:
                 loop.close()
 
@@ -177,9 +164,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("TOBB ETU - Automated Speaking Scorer")
-        self.setMinimumSize(900, 750)  # Slightly larger window for better spacing
+        self.setMinimumSize(900, 750) 
         
-        # Modern dark theme with improved color scheme
         self.setStyleSheet("""
             QMainWindow, QDialog {
                 background-color: #1e1e2e;
@@ -282,22 +268,18 @@ class MainWindow(QMainWindow):
             }
         """)
         
-        # Create central widget with rounded corners and shadow effect
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         
-        # Main layout with improved spacing and organization
         main_layout = QVBoxLayout(central_widget)
         main_layout.setSpacing(16)
         main_layout.setContentsMargins(24, 24, 24, 24)
         
-        # Header section with title
         header_label = QLabel("Automated Speaking Scorer")
         header_label.setProperty("heading", "true")
         header_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(header_label)
         
-        # Folder selection card
         folder_group = QGroupBox("Audio Files")
         folder_layout = QVBoxLayout(folder_group)
         folder_layout.setContentsMargins(16, 0, 16, 16)
@@ -331,7 +313,6 @@ class MainWindow(QMainWindow):
         
         main_layout.addWidget(folder_group)
         
-        # Options section in a card
         options_group = QGroupBox("Scoring Options")
         options_layout = QVBoxLayout(options_group)
         options_layout.setContentsMargins(16, 0, 16, 16)
@@ -341,7 +322,6 @@ class MainWindow(QMainWindow):
         options_info.setStyleSheet("color: #94e2d5; font-style: italic;")
         options_layout.addWidget(options_info)
         
-        # Grid layout for checkboxes (2x2)
         checkbox_grid = QGridLayout()
         checkbox_grid.setSpacing(16)
         
@@ -350,7 +330,6 @@ class MainWindow(QMainWindow):
         self.off_topic_checkbox = QCheckBox("Off-topic Detection")
         self.score_adjustment_checkbox = QCheckBox("Score Adjustment")
         
-        # Arrange checkboxes in a grid
         checkbox_grid.addWidget(self.analytic_checkbox, 0, 0)
         checkbox_grid.addWidget(self.holistic_checkbox, 0, 1)
         checkbox_grid.addWidget(self.off_topic_checkbox, 1, 0)
@@ -359,17 +338,14 @@ class MainWindow(QMainWindow):
         options_layout.addLayout(checkbox_grid)
         main_layout.addWidget(options_group)
         
-        # Status and progress section
         status_group = QGroupBox("Status")
         status_layout = QVBoxLayout(status_group)
         status_layout.setContentsMargins(16, 0, 16, 16)
         status_layout.setSpacing(12)
         
-        # Status indicator layout
         status_row = QHBoxLayout()
         status_row.setSpacing(10)
         
-        # Status indicator with improved styling
         self.status_light = QLabel("⬤")
         self.status_light.setFixedSize(24, 24)
         self.status_light.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -382,14 +358,12 @@ class MainWindow(QMainWindow):
         status_row.addWidget(self.progress_label, 1)
         status_layout.addLayout(status_row)
         
-        # Progress bar with more modern styling
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
         status_layout.addWidget(self.progress_bar)
         
         main_layout.addWidget(status_group)
         
-        # Summary results area
         summary_group = QGroupBox("Results")
         summary_layout = QVBoxLayout(summary_group)
         summary_layout.setContentsMargins(16, 0, 16, 16)
@@ -402,11 +376,9 @@ class MainWindow(QMainWindow):
         
         main_layout.addWidget(summary_group)
         
-        # Control buttons at bottom
         button_layout = QHBoxLayout()
         button_layout.setSpacing(16)
         
-        # Action buttons with modern styling
         btn_container = QWidget()
         btn_container_layout = QHBoxLayout(btn_container)
         btn_container_layout.setContentsMargins(0, 0, 0, 0)
@@ -465,7 +437,6 @@ class MainWindow(QMainWindow):
         
         button_layout.addWidget(btn_container, 1)
         
-        # Config button with more subtle styling
         self.config_btn = QPushButton("⚙ Config")
         self.config_btn.setFixedSize(120, 40)
         self.config_btn.clicked.connect(self.show_config)
@@ -483,10 +454,8 @@ class MainWindow(QMainWindow):
         button_layout.addWidget(self.config_btn, alignment=Qt.AlignmentFlag.AlignBottom)
         main_layout.addLayout(button_layout)
         
-        # Initialize folder path
         self.folder_path = None
         
-        # Set default scoring options
         self.analytic_checkbox.setChecked(True)
         self.score_adjustment_checkbox.setChecked(True)
     
@@ -503,7 +472,6 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Error", "Please select a folder first.")
             return
             
-        # Check if at least one scoring option is selected
         scoring_options = {
             'analytic': self.analytic_checkbox.isChecked(),
             'holistic': self.holistic_checkbox.isChecked(),
@@ -515,10 +483,8 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "Error", "Please select at least one scoring option.")
             return
         
-        # Disable UI elements during scoring
         self.disable_ui()
         
-        # Create and start worker thread
         self.worker = ScoringWorker(self.folder_path, scoring_options)
         self.worker.progress.connect(self.update_progress)
         self.worker.finished.connect(self.scoring_finished)
@@ -557,13 +523,12 @@ class MainWindow(QMainWindow):
         self.score_adjustment_checkbox.setEnabled(True)
         self.progress_bar.setVisible(False)
         self.progress_label.setText("Ready")
-        self.status_light.setStyleSheet("color: #a6e3a1;")  # Reset to green
+        self.status_light.setStyleSheet("color: #a6e3a1;")  
     
     def update_progress(self, value, message):
         """Update progress bar value and message."""
         self.progress_bar.setValue(value)
         self.progress_label.setText(message)
-        # Update status light color based on state
         if "Error" in message:
             self.status_light.setStyleSheet("color: #f38ba8;")  # Red
         elif "Processing" in message:
@@ -580,7 +545,6 @@ class MainWindow(QMainWindow):
         summary = []
         summary.append("=== Scoring Summary ===\n")
         
-        # Add processing statistics
         total_attempted = len(performances) + (len(failed_files) if failed_files else 0)
         summary.append(f"Success Rate: {len(performances)} / {total_attempted}")
         if failed_files:
@@ -601,18 +565,14 @@ class MainWindow(QMainWindow):
     def scoring_finished(self, performances):
         """Handle completion of scoring process."""
         try:
-            # Get failed files from worker
             failed_files = getattr(self.worker, 'failed_files', []) if hasattr(self, 'worker') else []
             
-            # Generate and display summary
             summary = self.generate_summary(performances, failed_files)
             self.summary_text.setVisible(True)
             self.summary_text.setText(summary)
             
-            # Save results to Excel in the same folder as audio files
             filepath = save_scores_to_excel(performances, self.folder_path)
             
-            # Show success message with appropriate wording
             if failed_files:
                 message = (f"Scoring completed with {len(failed_files)} failures.\n"
                           f"Successful results saved to:\n{filepath}")

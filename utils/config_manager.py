@@ -11,7 +11,7 @@ CONFIG_FILE = 'config.json'
 class SessionData:
     def __init__(self, session_id, tasks=None):
         self.session_id = session_id
-        self.tasks = tasks or {}  # Dictionary of task_key: task_value
+        self.tasks = tasks or {}  
 
 class ConfigDialog(QDialog):
     def __init__(self, parent=None):
@@ -20,14 +20,12 @@ class ConfigDialog(QDialog):
         self.setMinimumWidth(600)
         self.setMinimumHeight(400)
         
-        # Store both session data and widgets
-        self.session_data = []  # List of SessionData objects
+        self.session_data = [] 
         self.current_session_index = 0
         
         layout = QVBoxLayout()
         tabs = QTabWidget()
         
-        # API Keys tab
         api_tab = QWidget()
         api_layout = QVBoxLayout()
         
@@ -35,7 +33,6 @@ class ConfigDialog(QDialog):
         api_desc.setWordWrap(True)
         api_layout.addWidget(api_desc)
         
-        # Create input fields for each API key
         self.key_inputs = {}
         for key_name in ['ANALYTIC_SCORING_API_KEY', 'HOLISTIC_SCORING_API_KEY', 'OFF_TOPIC_DETECTION_API_KEY']:
             key_layout = QHBoxLayout()
@@ -60,7 +57,6 @@ class ConfigDialog(QDialog):
         api_layout.addStretch()
         api_tab.setLayout(api_layout)
         
-        # Task Definitions tab
         task_tab = QWidget()
         task_layout = QVBoxLayout()
         
@@ -68,7 +64,6 @@ class ConfigDialog(QDialog):
         task_desc.setWordWrap(True)
         task_layout.addWidget(task_desc)
         
-        # Navigation controls
         nav_layout = QHBoxLayout()
         self.prev_btn = QPushButton("← Previous Session")
         self.next_btn = QPushButton("Next Session →")
@@ -96,7 +91,6 @@ class ConfigDialog(QDialog):
         current_tasks = ConfigManager.get_task_definitions()
         if current_tasks:
             for session_id, task_data in current_tasks.items():
-                # Parse tasks into SessionData object
                 try:
                     clean_task_data = task_data.rstrip(',').strip()
                     task_dict = json.loads(clean_task_data)
@@ -108,12 +102,10 @@ class ConfigDialog(QDialog):
         self.update_navigation()
         self.show_current_session()
         
-        # Add tabs
         tabs.addTab(api_tab, "API Keys")
         tabs.addTab(task_tab, "Task Definitions")
         layout.addWidget(tabs)
         
-        # Buttons
         button_layout = QHBoxLayout()
         save_btn = QPushButton("Save")
         save_btn.clicked.connect(self.accept)
@@ -136,18 +128,15 @@ class ConfigDialog(QDialog):
                 for name, input in self.key_inputs.items()}
     
     def show_current_session(self):
-        # Clear current session container
         while self.current_session_container.count():
             item = self.current_session_container.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
         
-        # Show current session if any exist
         if not self.session_data:
             self.update_navigation()
             return
             
-        # Create widget for current session
         session = self.session_data[self.current_session_index]
         session_frame = self.create_session_widget(session)
         self.current_session_container.addWidget(session_frame)
@@ -176,12 +165,10 @@ class ConfigDialog(QDialog):
         session_frame = QWidget()
         session_layout = QVBoxLayout(session_frame)
         
-        # Session header
         header_layout = QHBoxLayout()
         session_label = QLabel(f"Session {session.session_id}")
         header_layout.addWidget(session_label)
         
-        # Delete session button
         delete_btn = QPushButton("Delete")
         delete_btn.clicked.connect(lambda: self.delete_session())
         header_layout.addWidget(delete_btn)
@@ -189,7 +176,6 @@ class ConfigDialog(QDialog):
         
         session_layout.addLayout(header_layout)
         
-        # Tasks container
         tasks_scroll = QScrollArea()
         tasks_scroll.setWidgetResizable(True)
         tasks_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -197,13 +183,11 @@ class ConfigDialog(QDialog):
         tasks_content = QWidget()
         tasks_container = QVBoxLayout(tasks_content)
         
-        # Add existing tasks
         for task_key, task_value in session.tasks.items():
             if isinstance(task_value, str):
                 task_value = task_value.replace('\\n', '\n')
             self.add_task_input(tasks_container, task_key, task_value)
         
-        # Add task button
         add_task_btn = QPushButton("+ Add Task")
         add_task_btn.clicked.connect(lambda: self.add_task_input(tasks_container))
         
@@ -217,25 +201,21 @@ class ConfigDialog(QDialog):
         task_widget = QWidget()
         task_layout = QHBoxLayout(task_widget)
         
-        # Auto-generate task ID if not provided
         if task_key is None:
             task_count = container.count() + 1
             task_key = f"t{task_count}"
         
-        # Replace QLineEdit with QLabel for task ID
         key_label = QLabel(task_key)
         key_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         key_label.setStyleSheet("background-color: #4a5568; color: white; border-radius: 3px; padding: 4px;")
-        key_label.setMaximumWidth(40)  # Make it smaller
+        key_label.setMaximumWidth(40) 
         
-        # Task value input
         value_input = QTextEdit()
         value_input.setPlaceholderText("Task description")
         if task_value:
             value_input.setText(task_value)
         value_input.setMaximumHeight(100)
         
-        # Delete task button
         delete_btn = QPushButton("Delete")
         delete_btn.clicked.connect(lambda: self.delete_task(task_widget, container))
         
@@ -245,34 +225,27 @@ class ConfigDialog(QDialog):
         
         container.addWidget(task_widget)
         
-        # Return focus to the task description for immediate editing
         value_input.setFocus()
     
     def delete_task(self, task_widget, container):
-        # Remove the widget from the container
         container.removeWidget(task_widget)
         task_widget.hide()
         task_widget.deleteLater()
         
-        # Renumber remaining task IDs
         self.renumber_tasks(container)
 
     def renumber_tasks(self, container):
-        # Collect all remaining task widgets
         for i in range(container.count()):
             task_widget = container.itemAt(i).widget()
             if task_widget:
                 task_layout = task_widget.layout()
                 key_label = task_layout.itemAt(0).widget()
-                # Update the task ID to maintain sequential numbering
                 key_label.setText(f"t{i+1}")
     
     def delete_session(self):
-        # Remove the current session data
         if self.session_data:
             del self.session_data[self.current_session_index]
             
-            # Adjust index
             if not self.session_data:
                 self.current_session_index = 0
             elif self.current_session_index >= len(self.session_data):
@@ -281,9 +254,7 @@ class ConfigDialog(QDialog):
             self.show_current_session()
     
     def add_new_session(self):
-        # Generate next session ID
         next_id = str(len(self.session_data) + 1)
-        # Create new session
         new_session = SessionData(next_id)
         self.session_data.append(new_session)
         self.current_session_index = len(self.session_data) - 1
@@ -293,14 +264,11 @@ class ConfigDialog(QDialog):
         tasks = {}
         
         for session in self.session_data:
-            # Collect task data from UI
             current_tasks = self.collect_current_session_tasks()
             
-            # Only update if we're on that session
             if self.current_session_index < len(self.session_data):
                 self.session_data[self.current_session_index].tasks = current_tasks
             
-            # Format tasks as JSON
             if session.tasks:
                 tasks[session.session_id] = json.dumps(session.tasks)
         
@@ -346,14 +314,11 @@ class ConfigDialog(QDialog):
 class ConfigManager:
     @staticmethod
     def get_config_path():
-        # Get the directory where the executable or script is located
         if getattr(sys, 'frozen', False):
-            # If running as executable
             base_dir = os.path.dirname(sys.executable)
         else:
-            # If running as script
             base_dir = os.path.dirname(os.path.abspath(__file__))
-            base_dir = os.path.dirname(base_dir)  # Go up one level to project root
+            base_dir = os.path.dirname(base_dir)  
         return os.path.join(base_dir, CONFIG_FILE)
     
     @staticmethod
@@ -404,7 +369,6 @@ class ConfigManager:
             }
             ConfigManager.save_config(config)
             
-            # Update environment variables
             for key, value in api_keys.items():
                 os.environ[key] = value
             return True

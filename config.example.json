@@ -1,0 +1,15 @@
+{
+    "ANALYTIC_SCORING_API_KEY": "your_analytic_scoring_api_key_here",
+    "HOLISTIC_SCORING_API_KEY": "your_holistic_scoring_api_key_here",
+    "OFF_TOPIC_DETECTION_API_KEY": "your_off_topic_detection_api_key_here",
+    "TASK_DEFINITIONS": {
+        "1": {
+            "t1": "Some people prefer to live in small towns where life is quieter. Others prefer to live in big cities with lots of activities. Which place would you prefer to live in?",
+            "t2": "Read the following conversation between two people. The woman expresses her opinion about the man's problem. Talk about the dialogue. The setting of the conversation: University library, late morning. Two students are studying together.\n# The Conversation:\nFemale: Hey, you look worried. What's up?\nMale: Hi, yes a little actually. I'm really struggling with my essay for English class and I have an exam next week.\nFemale: What part are you having trouble with?\nMale: Mainly the thesis statement and how to support it with strong arguments.\nFemale: I see. How about trying brainstorming first? It is usually the first step of essay writing.\nMale: You are right. That could definitely help organize my thoughts better. I will definitely try that.\nFemale: Or, you could also visit the writing center. They offer great feedback and can help you write your thesis.\nMale: Those are great ideas. I'll try them out.\nFemale: Glad I could help. Let's meet up later this week to review our progress.\nMale: Sounds good. Thanks a lot.\nFemale: You're welcome! We should have some coffee afterward too.\nMale: Definitely. I could use a break after all this writing.\nFemale: Agreed. Let's make it a plan."
+        },
+        "2": {
+            "t1": "Some students prefer to study during the day for better natural light. Others prefer to study at night when it is quieter. Which one do you prefer?",
+            "t2": "Read the following conversation between two people. The woman expresses her opinion about the man's problem. Talk about the dialogue. The setting of the conversation: Campus bookstore, late afternoon. Two students are browsing books."
+        }
+    }
+} 
