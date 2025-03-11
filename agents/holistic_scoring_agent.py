@@ -1,15 +1,13 @@
 import google.generativeai as genai
 from models.score_models import HolisticScore
 from utils.file_utils import read_file_as_bytes
-import os
 import re
 from task_definitions import TASK_DEFINITIONS
 from utils.response_parser import ResponseParser
 import time
-from typing import Any, Optional
-import json
-import requests
+from typing import Any
 from utils.config_manager import ConfigManager
+from prompts.holistic_scoring_prompts import SYSTEM_PROMPT
 
 class HolisticScoringAgent:
     MAX_RETRIES = 3
@@ -21,37 +19,13 @@ class HolisticScoringAgent:
         if not self.api_key:
             raise ValueError("HOLISTIC_SCORING_API_KEY not found in configuration")
         self._initialize_model()
-        self._initialize_prompt_template()
+        self.prompt_template =  "\n".join(SYSTEM_PROMPT)
     
     def _initialize_model(self) -> None:
         """Initialize the Gemini model with API key."""
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.MODEL_NAME)
 
-    def _initialize_prompt_template(self) -> None:
-        """Initialize the scoring prompt template."""
-        prompt_lines = [
-            "You are a speaking performance classifier for students of English as a second language.",
-            "See the task and the band definitions below.",
-            "You will be provided with an audio file of a response to the given task.",
-            "Consider the student's overall performance and classify the student into a band.",
-            "DO NOT punish the student for incomplete final sentences because the audio files are trimmed at a time limit after the performance is recorded.",
-            "Reply as JSON in this format: { overall_score: number }",
-            "",
-            "<TASK_DEFINITION>",
-            "<<TASK_DEFINITION>>",
-            "</TASK_DEFINITION>",
-            "",
-            "<BAND_DEFINITIONS>",
-            "85-100: Intermediate or higher",
-            "70-84: Pre-intermediate",
-            "60-69: Elementary",
-            "35-59: Beginner",
-            "0-34: Foundations",
-            "</BAND_DEFINITIONS>"
-        ]
-        self.prompt_template = "\n".join(prompt_lines)
-    
     def _parse_file_name(self, file_path: str) -> tuple[str, str]:
         """Parse the file name to get session and task IDs."""
         match = re.search(r'-(\d+)-t(\d+)\.mp3$', file_path)

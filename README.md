@@ -27,6 +27,10 @@ automated_speaking_scorer/
 │   ├── holistic_scoring_agent.py    # Provides overall performance scores
 │   ├── off_topic_detection_agent.py # Detects off-topic responses
 │   └── score_adjustment_agent.py    # Adjusts and normalizes scores
+├── prompts/                    # AI model prompts for scoring
+│   ├── analytic_scoring_prompts.py  # Prompts for analytic scoring
+│   ├── holistic_scoring_prompts.py  # Prompts for holistic scoring
+│   └── off_topic_detection_prompts.py # Prompts for off-topic detection
 ├── utils/                     # Utility functions and helpers
 │   ├── config_manager.py     # Configuration management
 │   ├── excel_utils.py        # Excel file handling utilities

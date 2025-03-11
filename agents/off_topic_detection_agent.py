@@ -1,15 +1,13 @@
 import google.generativeai as genai
 from models.score_models import OffTopicAnalysis
 from utils.file_utils import read_file_as_bytes
-import os
 import re
 from task_definitions import TASK_DEFINITIONS
 from utils.response_parser import ResponseParser
 import time
 from typing import Any
-import json
-import requests
 from utils.config_manager import ConfigManager
+from prompts.off_topic_detection_prompts import SYSTEM_PROMPT
 
 class OffTopicDetectionAgent:
     MAX_RETRIES = 3
@@ -21,31 +19,13 @@ class OffTopicDetectionAgent:
         if not self.api_key:
             raise ValueError("OFF_TOPIC_DETECTION_API_KEY not found in configuration")
         self._initialize_model()
-        self._initialize_prompt_template()
+        self.prompt_template = "\n".join(SYSTEM_PROMPT)
     
     def _initialize_model(self) -> None:
         """Initialize the Gemini model with API key."""
         genai.configure(api_key=self.api_key)
         self.model = genai.GenerativeModel(self.MODEL_NAME)
 
-    def _initialize_prompt_template(self) -> None:
-        """Initialize the scoring prompt template."""
-        prompt_lines = [
-            "You are an expert in analyzing whether a student's speech response is on-topic or off-topic.",
-            "You will be provided with a task definition and an audio file of a student's response.",
-            "Analyze if the response addresses the given task or goes off-topic.",
-            "Consider partial relevance and tangential discussions in your analysis.",
-            "DO NOT punish the student for incomplete final sentences because the audio files are trimmed at a time limit after the performance is recorded.",
-            "Reply as JSON in this format: { off_topic: boolean, confidence: number, explanation: string }",
-            "The confidence should be between 0 and 1, indicating how certain you are about your assessment.",
-            "The explanation should briefly justify your decision.",
-            "",
-            "<TASK_DEFINITION>",
-            "<<TASK_DEFINITION>>",
-            "</TASK_DEFINITION>"
-        ]
-        self.prompt_template = "\n".join(prompt_lines)
-    
     def _parse_file_name(self, file_path: str) -> tuple[str, str]:
         """Parse the file name to get session and task IDs."""
         match = re.search(r'-(\d+)-t(\d+)\.mp3$', file_path)
