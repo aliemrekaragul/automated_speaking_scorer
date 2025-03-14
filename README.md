@@ -99,6 +99,38 @@ python build.py
 
 The executable will be created in the `dist` directory as `Speaking Scorer.exe` (Windows) or `Speaking Scorer` (macOS/Linux).
 
+### Windows Defender and Antivirus Concerns
+
+When running the executable for the first time, Windows Defender or other antivirus software might flag it as potentially harmful. This is a common issue with Python executables created using PyInstaller and is a false positive. Here's how to resolve it:
+
+1. When you first download/run the executable:
+   - Right-click the file
+   - Select 'Properties'
+   - At the bottom of the Properties window, look for "Security" section
+   - Check the box that says "Unblock"
+   - Click Apply and OK
+
+2. If Windows Defender is still blocking the application, you can add it to exclusions:
+   - Open Windows Security (type it in the Start menu)
+   - Click on "Virus & threat protection"
+   - Under "Virus & threat protection settings", click "Manage settings"
+   - Scroll down to "Exclusions" and click "Add or remove exclusions"
+   - Click "Add an exclusion" and select either:
+     - The Speaking Scorer executable file
+     - The folder containing the executable
+
+3. Running the application:
+   - The first time you run the application, you may need administrator privileges
+   - Right-click the executable and select "Run as administrator"
+   - After the first run, normal user privileges should be sufficient
+
+These security measures are in place because:
+- The executable is not digitally signed (which requires a paid certificate)
+- PyInstaller-created executables package Python and required libraries together
+- The packaging method can sometimes trigger antivirus heuristic detection
+
+The application is completely safe to use, and the source code is open for inspection in this repository.
+
 ### Using the Application
 
 1. Run the executable or the Python script.
