@@ -4,9 +4,9 @@
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
+    binaries=[('bin/ffmpeg.exe', 'bin')],
     datas=[('task_definitions.py', '.'), ('utils/config_manager.py', 'utils'), ('prompts/*', 'prompts/')],
-    hiddenimports=['google.cloud.aiplatform', 'soundfile', 'librosa', 'numpy', 'pandas', 'xlsxwriter', 'PyQt6', 'json'],
+    hiddenimports=['google.cloud.aiplatform', 'soundfile', 'librosa', 'numpy', 'pandas', 'xlsxwriter', 'PyQt6', 'json', 'pydub'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -35,7 +35,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    version='c:\\automated_speaking_scorer\\version_info.txt',
+    version='C:\\automated_speaking_scorer\\version_info.txt',
     uac_admin=True,
-    icon=['c:\\automated_speaking_scorer\\resources\\app_icon.ico'],
+    icon=['C:\\automated_speaking_scorer\\resources\\app_icon.ico'],
 )

@@ -9,6 +9,7 @@ from agents.score_adjustment_agent import ScoreAdjustmentAgent
 from models.score_models import SpeakingPerformance
 from utils.excel_utils import save_scores_to_excel
 from utils.config_manager import ConfigManager
+from utils.folder_utils import process_student_folders
 from datetime import datetime
 
 from PyQt6.QtWidgets import (
@@ -57,9 +58,15 @@ class ScoringWorker(QThread):
         try:
             audio_files = [f for f in os.listdir(self.folder_path) if f.endswith('.mp3')]
             if not audio_files:
-                self.add_error("No MP3 files found in the selected folder.")
-                self.error.emit((len(self.errors), self.save_error_log()))
-                return
+                # No MP3 files found, check for OGG files in student folders
+                self.progress.emit(0, "Converting OGG files to MP3...")
+                mp3_dir = process_student_folders(self.folder_path)
+                self.folder_path = mp3_dir  # Update folder path to the mp3_files directory
+                audio_files = [f for f in os.listdir(self.folder_path) if f.endswith('.mp3')]
+                
+                if not audio_files:
+                    self.add_error("No audio files (MP3 or OGG) found in the selected directory.")
+                    return
                 
             performances = []
             failed_files = []

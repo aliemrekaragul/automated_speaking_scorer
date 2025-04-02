@@ -65,9 +65,11 @@ VSVersionInfo(
         '--hidden-import=xlsxwriter',
         '--hidden-import=PyQt6',
         '--hidden-import=json',
+        '--hidden-import=pydub',
         '--add-data=task_definitions.py;.',
         '--add-data=utils/config_manager.py;utils',
         '--add-data=prompts/*;prompts/',  # Include prompts directory
+        '--add-binary=bin/ffmpeg.exe;bin' if sys.platform == 'win32' else '--add-binary=bin/ffmpeg;bin',  # Include ffmpeg
         '--clean',
         f'--version-file={version_file_path}',  # Add version info
         '--uac-admin',  # Request admin privileges
